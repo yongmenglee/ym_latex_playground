@@ -1,0 +1,197 @@
+\documentclass[12pt, a4paper]{report}
+
+% **************************************************
+% Packages
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{pgfplots}
+\usepackage{mathrsfs}
+\usepackage{ifthen}
+\usepackage[a4paper, total={6.5in, 8.5in}]{geometry} % adjust padding here.
+
+\pgfplotsset{compat=1.15}
+\usetikzlibrary{arrows, automata, positioning}
+\pagestyle{empty}
+
+% **************************************************
+% Define variables
+
+\def\assessmentType{Practice}
+\def\assessmentTitle{Draw Neural Networks}
+
+% **************************************************
+% Header and Footer
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\assessmentType: \assessmentTitle}
+\rfoot{Page \thepage}
+
+% **************************************************
+% New commands
+% numberthis: Add number to block of multiple equations.
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+
+% insertimage: Add image to the current document.
+% 1. Image Directory
+% 2. Image caption
+% 3. Image label
+\newcommand{\insertimage}[3]{
+	\noindent\par
+	\noindent\makebox[\textwidth][c]{
+		\begin{minipage}{0.55\textheight}
+			\centering
+			\includegraphics[width=0.8\textwidth]{#1}
+			\captionof{figure}{#2} % Use caption outside of figure
+			\label{#3}
+			\vspace{5mm}
+		\end{minipage}
+	}
+}
+
+% Define new command to draw neural network.
+\newcommand{\drawneuralnetwork}[1] {
+	\begin{minipage}{1.0\textwidth}
+		\centering
+		\vspace{5mm}
+		\noindent
+		
+		% START DRAWING NEURAL NETWORKS
+		\begin{tikzpicture}
+		% Define distance between nodes
+		\def\hdist{4.5}
+		\def\vdist{1.2}
+		
+		% Define layer configurations
+		% Note: Each element represents the number of neurons in each layer.
+		\def\nneurons{#1}
+		
+		% **************************************************
+		% Part 1: NODES
+		% Loop through each layers in the network
+		% (i.e., each element in the list of number of neurons in each layer).
+		\foreach \nneuron [count=\layeridx] in \nneurons {
+			% Check if \nneuron (number of neuron in the current layer) is 0.
+			% Note: We set 0 as the terminal in the list.
+			% - If True, do nothing.
+			% - Otherwise, proceed.
+			\ifthenelse{\equal{\nneuron}{0}} {} {
+				% Loop through each neuron in the current layer.
+				\foreach \x in {1,...,\nneuron} {
+					% Define current node
+					% Case 1: Default: \nodelabel is empty
+					\def\nodelabel{}
+					
+					% Case 2: Input layer: \nodelabel is x_n
+					\ifthenelse{\equal{\layeridx}{1}} {
+						\def\nodelabel{$x_\x$}
+					} {
+						% Check next layer
+						% Note: Index starts from 0.
+						\pgfmatharray{\nneurons}{\layeridx}
+						\edef\nextnneuron{\pgfmathresult}
+						
+						% Case 3: Output layer: \nodelabel is yhat_n
+						\ifthenelse{\equal{\nextnneuron}{0}} {
+							\def\nodelabel{$\hat{y}_\x$}
+						}
+					}
+					
+					% Calculate the positions of the nodes
+					\pgfmathsetmacro\xpos{\layeridx * \hdist};
+					\pgfmathsetmacro\ypos{((\nneuron / 2) - \x) * \vdist};
+					
+					% Draw nodes
+					\node [state] at (\xpos, \ypos) (L\layeridx N\x) {\nodelabel};
+				}
+			}
+		}
+		
+		% **************************************************
+		% Part 2: CONNECTIONS + ANNOTATION
+		% Loop through each layers in the network
+		% (i.e., each element in the list of number of neurons in each layer).
+		\foreach \nneuron [count=\layeridx] in \nneurons {
+			% Calculate index of the next layer
+			% Note: use \pgfmathtruncatemacro to get integer value
+			\pgfmathtruncatemacro\nextlayeridx{\layeridx + 1}
+			
+			% Check if \nneuron (number of neuron in the current layer) is 0.
+			% Note: We set 0 as the terminal in the list.
+			% - If True, do nothing.
+			% - Otherwise, proceed.
+			\ifthenelse {\equal{\nneuron}{0}} {} {
+				% Define \nextnneuron (number of neurons in the next layer).
+				% Note: index starts from 0
+				\pgfmatharray{\nneurons}{\layeridx}
+				\edef\nextnneuron{\pgfmathresult}
+				
+				% Check if \nextnneuron is 0
+				% - If True, do nothing.
+				% - Otherwise, proceed.
+				\ifthenelse {\equal{\nextnneuron}{0}} {} {
+					% ***
+					% CONNECTIONS
+					% Loop through each neuron in the current layer.		
+					\foreach \A in {1,...,\nneuron} {
+						% Loop through each neuron in the next layer.
+						\foreach \B in {1,...,\nextnneuron} {
+							% Draw arrow lines to connect every neuron in the current layer 
+							% to those in the next layer.					
+							\draw[->] (L\layeridx N\A.east) -- (L\nextlayeridx N\B.west) {};
+						}
+					}
+					
+					% ***
+					% ANNOTATIONS
+					% Calculate position values for the annotations.
+					\pgfmathsetmacro{\maxnneuron}{max(\nneurons)}
+					\pgfmathsetmacro{\xposlabel}{(\layeridx + 0.5) * \hdist}
+					\pgfmathsetmacro{\yposlabel}{(-(\maxnneuron + 1) / 2) * \vdist}
+					
+					% Draw annotations.
+					\node [label={}] at (\xposlabel, \yposlabel) {$W^{(\layeridx)}$};
+				}
+			}
+		}
+		
+		\end{tikzpicture}
+	\end{minipage}
+}
+
+\begin{document}
+	\begin{titlepage}
+		\centering
+		***
+		\vfill
+		{\LARGE\bfseries The title page.\par}
+		\vfill
+		***
+	\end{titlepage}
+	
+	% End of title page
+	
+	\section*{Draw Neural Network}
+	
+	Draw neural network using \textbf{TikZ} package.
+	
+	\subsection*{Example 1}
+	A network consists of 4 layers, each having 5, 6, 5, and 2 neurons respectively.
+	
+	\noindent \drawneuralnetwork{5,6,5,2,0}
+	
+	\subsection*{Example 2}
+	A simple network consists of 3 layers, each having 4, 4, and 2 neurons respectively.
+	
+	\noindent \drawneuralnetwork{4,4,2,0}
+	
+	\newpage
+	
+	\subsection*{Example 3}
+	A complex network consists of 4 layers, each having 10, 12, 8, and 5 neurons respectively.
+	
+	\noindent \drawneuralnetwork{10,12,8,5,0}
+	
+\end{document}
