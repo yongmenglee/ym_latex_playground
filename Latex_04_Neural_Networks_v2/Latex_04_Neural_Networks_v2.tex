@@ -86,7 +86,7 @@
 					
 					% Case 2: Input layer: \nodelabel is x_n
 					\ifthenelse{\equal{\layeridx}{1}} {
-						\def\nodelabel{$x_\x$}
+						\def\nodelabel{$x_{\x}$}
 					} {
 						% Check next layer
 						% Note: Index starts from 0.
@@ -95,7 +95,7 @@
 						
 						% Case 3: Output layer: \nodelabel is yhat_n
 						\ifthenelse{\equal{\nextnneuron}{0}} {
-							\def\nodelabel{$\hat{y}_\x$}
+							\def\nodelabel{$\hat{y}_{\x}$}
 						}
 					}
 					
